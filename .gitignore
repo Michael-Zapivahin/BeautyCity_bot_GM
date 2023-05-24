@@ -129,3 +129,7 @@ dmypy.json
 .pyre/
 
 .idea/
+services/telegram_api.py
+services/telegram_log.txt
+services/url_processing.py
+services/telegram_test.py
