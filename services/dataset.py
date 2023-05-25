@@ -56,13 +56,13 @@ def get_salons():
 def get_schedule(day, salon=None, master=None, empty=False):
     start_time = day.replace(hour=0, minute=0, second=0, microsecond=0)
     end_time = day.replace(hour=23, minute=59, second=59, microsecond=0)
-    sh = Schedule.objects.filter(datetime__gte=start_time, datetime__lte=end_time, confirmation=empty)
+    schedules_query = Schedule.objects.filter(datetime__gte=start_time, datetime__lte=end_time, confirmation=empty)
     if salon:
-        sh = sh.filter(salon=salon)
+        schedules_query = schedules_query.filter(salon=salon)
     if master:
-        sh = sh.filter(employee=master)
+        schedules_query = schedules_query.filter(employee=master)
     schedules = []
-    for schedule in sh:
+    for schedule in schedules_query:
         schedules.append(
             {
                 'salon': schedule.salon,
