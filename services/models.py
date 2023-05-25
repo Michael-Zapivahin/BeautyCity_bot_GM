@@ -42,7 +42,7 @@ class Salon(models.Model):
 
 
 class Schedule(models.Model):
-    salon = models.ForeignKey(Salon, on_delete=models.CASCADE, related_name='schedules', verbose_name='Schedule')
+    salon = models.ForeignKey(Salon, on_delete=models.CASCADE, related_name='schedules', verbose_name='Salon')
     employee = models.ForeignKey(
         Employee, on_delete=models.PROTECT, related_name='schedules', verbose_name='Employee'
     )

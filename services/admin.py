@@ -20,7 +20,6 @@ class ClientAdmin(admin.ModelAdmin):
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
     def image_tag(self, employee):
-        # return format_html('<img src="{}" />'.format(obj.photo.url))
         return format_html(
             '<img style="max-height:{height}" src="{url}"/>',
             url=employee.photo.url,
@@ -38,12 +37,17 @@ class ProcedureAdmin(admin.ModelAdmin):
 
 @admin.register(Salon)
 class SalonAdmin(admin.ModelAdmin):
-    pass
+    def image_tag(self, salon):
+        return format_html(
+            '<img style="max-height:{height}" src="{url}"/>',
+            url=salon.photo.url,
+            height='100px',
+        )
 
 
 @admin.register(Schedule)
 class ScheduleAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['datetime', 'salon', 'employee']
 
 
 @admin.register(Payment)
