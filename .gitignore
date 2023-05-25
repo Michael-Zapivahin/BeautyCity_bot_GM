@@ -109,6 +109,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+/media
 
 # Spyder project settings
 .spyderproject
@@ -133,3 +134,9 @@ services/telegram_api.py
 services/telegram_log.txt
 services/url_processing.py
 services/telegram_test.py
+services/.DS_Store
+beautycity/.DS_Store
+.DS_Store
+
+services/management/commands/mybot.py
+services/management/commands/mybot1.py

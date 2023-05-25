@@ -11,6 +11,13 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from environs import Env
+from dotenv import load_dotenv
+
+load_dotenv()
+env = Env()
+env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +27,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-dyo_c(k8!lk%^k4+@h8)m%bdwb&eo$4b!nnlj2#-(kp0eq-te3'
+SECRET_KEY = os.environ['SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', default=False)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1']
 
 
 # Application definition
@@ -112,13 +119,19 @@ USE_I18N = True
 
 USE_TZ = True
 
+MEDIA_ROOT = os.path.join(BASE_DIR, os.getenv('MEDIA_ROOT', default='media'))
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
+MEDIA_URL = os.getenv('MEDIA_URL', '/media/')
 
-STATIC_URL = 'static/'
+STATIC_ROOT = os.getenv('STATIC_ROOT', default='./assets')
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
+STATIC_URL = os.getenv('STATIC_URL', default='/static/')
+
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, 'static'),
+)
+
+
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

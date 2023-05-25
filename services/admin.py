@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 from .models import (
     Client,
     Employee,
@@ -18,7 +19,16 @@ class ClientAdmin(admin.ModelAdmin):
 
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
-    pass
+    def image_tag(self, employee):
+        # return format_html('<img src="{}" />'.format(obj.photo.url))
+        return format_html(
+            '<img style="max-height:{height}" src="{url}"/>',
+            url=employee.photo.url,
+            height='100px',
+        )
+
+    image_tag.short_description = 'Photo'
+    list_display = ['name', 'phone', 'image_tag']
 
 
 @admin.register(Procedure)
