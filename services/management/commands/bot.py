@@ -1,4 +1,7 @@
 from django.core.management.base import BaseCommand
+from services.models import Employee, Salon
+from django.shortcuts import get_object_or_404
+from django.http import Http404
 import calendar
 import datetime
 import telebot
@@ -13,6 +16,7 @@ RECORD_INF = {}
 TG_TOKEN = os.environ['TG_BOT_TOKEN']
 is_phone_handler_registered = False
 is_name_registered = False
+
 
 
 def get_calendar(call_back, month=None):
@@ -103,16 +107,45 @@ def get_list_procedures(start_line_num: int, call_back):
 
 
 def get_list_of_times(start_line_num, call_back):
-    markup = types.InlineKeyboardMarkup(row_width=4)
+    global RECORD_INF
+    salon, master = None, None
+    today = datetime.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
+    day = today
+    try:
+        master_or_salon = RECORD_INF['inf_about_master_or_salon'].split('__')
+        if len(master_or_salon) > 1 and master_or_salon[0] == 'master':
+            master = get_object_or_404(Employee, pk=master_or_salon[1])
+        elif len(master_or_salon) > 1 and master_or_salon[0] == 'salon':
+            salon = get_object_or_404(Salon, pk=master_or_salon[1])
+
+        date_id = RECORD_INF['day'].split('__')
+        if len(date_id) > 1 and date_id[0] == 'day':
+            day = datetime.datetime.strptime(date_id[1], '%d %B %Y')
+            print(day)
+    except KeyError or Http404 or IndexError or ValueError:
+        pass
+
     start_line_num = int(start_line_num)
-    times = [
-                '9:00',
-            ][start_line_num:start_line_num + 12]
+    day_times = dataset.get_schedule(day, salon=salon, master=master)
+
+    print(day_times)
+    if len(day_times) > start_line_num + 12:
+        day_times = day_times[start_line_num:start_line_num + 12]
+
+    markup = types.InlineKeyboardMarkup(row_width=4)
     time_buttons = []
-    for time in times:
-        time_buttons.append(types.InlineKeyboardButton(text=time, callback_data=f'time_{time}'))
+    for time in day_times:
+        time_buttons.append(types.InlineKeyboardButton(
+            text=time['datetime'].strftime("%H:%M"),
+            callback_data=f'time__{time["id"]}')
+        )
+    if len(day_times) == 0:
+        time_buttons.append(types.InlineKeyboardButton(
+            text='нет времени',
+            callback_data=f'time__0')
+        )
     markup.add(*time_buttons)
-    # Создаем кнопки для переключения месяцев
+
     prev_procedures_button = types.InlineKeyboardButton(
         text="◀️",
         callback_data=f'prev_times_{start_line_num - 12}'
@@ -141,6 +174,23 @@ def replace_message(call, text, bot, markup):
 
 class BOT:
     def start(self):
+
+        # try:
+        #     master_or_salon = val['inf_about_master_or_salon'].split('__')
+        #     if master_or_salon[0] == 'master':
+        #         master = get_object_or_404(Employee, pk=master_or_salon[1])
+        #         print(master)
+        #     elif master_or_salon[0] == 'salon':
+        #         salon = get_object_or_404(Salon, pk=master_or_salon[1])
+        #         print(salon)
+        #
+        #     date = val['day'].split('__')
+        #     if date[0] == 'day':
+        #         day = datetime.datetime.strptime(date[1], '%d %B %Y')
+        #         print(day)
+        # except KeyError:
+        #     return
+
         bot = telebot.TeleBot(TG_TOKEN)
 
         @bot.message_handler(commands=['start', 'help'])
