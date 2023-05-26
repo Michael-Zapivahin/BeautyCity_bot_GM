@@ -47,16 +47,16 @@ def get_salons():
             {
                 'name': salon.name,
                 'phone': salon.phone,
-                'position': salon.address,
+                'address': salon.address,
             }
         )
     return salons
 
 
-def get_schedule(day, salon=None, master=None, empty=False):
+def get_schedule(day, salon=None, master=None, busy=False):
     start_time = day.replace(hour=0, minute=0, second=0, microsecond=0)
     end_time = day.replace(hour=23, minute=59, second=59, microsecond=0)
-    schedules_query = Schedule.objects.filter(datetime__gte=start_time, datetime__lte=end_time, confirmation=empty)
+    schedules_query = Schedule.objects.filter(datetime__gte=start_time, datetime__lte=end_time, confirmation=busy)
     if salon:
         schedules_query = schedules_query.filter(salon=salon)
     if master:
