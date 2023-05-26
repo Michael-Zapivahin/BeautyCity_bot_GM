@@ -47,7 +47,7 @@ class SalonAdmin(admin.ModelAdmin):
 
 @admin.register(Schedule)
 class ScheduleAdmin(admin.ModelAdmin):
-    list_display = ['datetime', 'salon', 'employee']
+    list_display = ['datetime', 'salon', 'client','employee']
 
 
 @admin.register(Payment)

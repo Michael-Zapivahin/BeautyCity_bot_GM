@@ -121,14 +121,12 @@ def get_list_of_times(start_line_num, call_back):
         date_id = RECORD_INF['day'].split('__')
         if len(date_id) > 1 and date_id[0] == 'day':
             day = datetime.datetime.strptime(date_id[1], '%d %B %Y')
-            print(day)
     except KeyError or Http404 or IndexError or ValueError:
         pass
 
     start_line_num = int(start_line_num)
     day_times = dataset.get_schedule(day, salon=salon, master=master)
 
-    print(day_times)
     if len(day_times) > start_line_num + 12:
         day_times = day_times[start_line_num:start_line_num + 12]
 
@@ -174,22 +172,8 @@ def replace_message(call, text, bot, markup):
 
 class BOT:
     def start(self):
-
-        # try:
-        #     master_or_salon = val['inf_about_master_or_salon'].split('__')
-        #     if master_or_salon[0] == 'master':
-        #         master = get_object_or_404(Employee, pk=master_or_salon[1])
-        #         print(master)
-        #     elif master_or_salon[0] == 'salon':
-        #         salon = get_object_or_404(Salon, pk=master_or_salon[1])
-        #         print(salon)
-        #
-        #     date = val['day'].split('__')
-        #     if date[0] == 'day':
-        #         day = datetime.datetime.strptime(date[1], '%d %B %Y')
-        #         print(day)
-        # except KeyError:
-        #     return
+        # dataset.make_order('', '')
+        # return
 
         bot = telebot.TeleBot(TG_TOKEN)
 

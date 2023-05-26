@@ -1,6 +1,7 @@
-from services.models import Procedure, Employee, Salon, Schedule
-from datetime import datetime, timedelta, date
+from services.models import Procedure, Employee, Salon, Schedule, Client
+from datetime import datetime, timedelta
 from django.shortcuts import get_object_or_404
+from django.http import Http404
 
 
 def get_day_times(day, interval):
@@ -104,3 +105,35 @@ def set_schedule():
             set_salon_schedule(salon1, employee, day_times)
 
 
+# def make_order(time, salon, master, procedure=None):
+def make_order(order_info, client_name):
+    # order_info = {
+    #     'inf_about_master_or_salon': 'salon__1',
+    #     'procedure': 'procedure__9', 'day': 'day__25 May 2023',
+    #     'time': 'time__1', 'phone_number': '+23030001122'}
+    procedure = None
+    try:
+        schedule_id = order_info['time'].split('__')[1]
+        phone_number = order_info['phone_number']
+    except KeyError or IndexError or ValueError:
+        return False
+
+    client, created = Client.objects.get_or_create(
+        name=client_name,
+        phone=phone_number,
+    )
+    client.save()
+
+    order, created = Schedule.objects.update_or_create(
+        pk=schedule_id,
+        defaults={
+            'client': client,
+            'procedure': procedure,
+            'confirmation': True,
+        }
+    )
+    return order
+
+
+if __name__ == '__main__':
+    make_order()
