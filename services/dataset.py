@@ -19,6 +19,7 @@ def get_procedures():
     for procedure in Procedure.objects.all():
         procedures.append(
             {
+                'id': procedure.id,
                 'name': procedure.name,
                 'cost': procedure.cost,
                 'time': procedure.time,
@@ -32,6 +33,7 @@ def get_employees():
     for employee in Employee.objects.all():
         employees.append(
             {
+                'id': employee.id,
                 'name': employee.name,
                 'phone': employee.phone,
                 'position': employee.position,
@@ -45,6 +47,7 @@ def get_salons():
     for salon in Salon.objects.all():
         salons.append(
             {
+                'id': salon.id,
                 'name': salon.name,
                 'phone': salon.phone,
                 'address': salon.address,
@@ -65,6 +68,7 @@ def get_schedule(day, salon=None, master=None, busy=False):
     for schedule in schedules_query:
         schedules.append(
             {
+                'id': schedule.id,
                 'salon': schedule.salon,
                 'employee': schedule.employee,
                 'datetime': schedule.datetime,

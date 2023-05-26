@@ -36,7 +36,7 @@ def get_calendar(call_back, month=None):
     days_in_month = calendar.monthrange(now.year, month)[1]
     day_buttons = []
     for day in range(1, days_in_month + 1):
-        day_buttons.append(types.InlineKeyboardButton(text=str(day), callback_data=f'day_{day} {month_year_text}'))
+        day_buttons.append(types.InlineKeyboardButton(text=str(day), callback_data=f'day__{day} {month_year_text}'))
     markup.add(*day_buttons)
     markup.row(types.InlineKeyboardButton(text='Назад', callback_data=call_back))
     return markup
@@ -48,7 +48,10 @@ def get_list_masters(start_line_num, call_back):
     masters = dataset.get_employees()[start_line_num:start_line_num + 10]
     master_buttons = []
     for index, master in enumerate(masters):
-        master_buttons.append(types.InlineKeyboardButton(text=master["name"], callback_data=f'master{index}'))
+        master_buttons.append(types.InlineKeyboardButton(
+            text=master["name"],
+            callback_data=f'master__{master["id"]}')
+        )
     markup.add(*master_buttons)
     prev_masters_button = types.InlineKeyboardButton(text="◀️", callback_data=f'prev_masters_{start_line_num - 10}')
     next_masters_button = types.InlineKeyboardButton(text="▶️", callback_data=f'next_masters_{start_line_num + 10}')
@@ -57,89 +60,77 @@ def get_list_masters(start_line_num, call_back):
     return markup
 
 
-def get_list_salons(startline_num: int, call_back):
+def get_list_salons(start_line_num: int, call_back):
     markup = types.InlineKeyboardMarkup(row_width=1)
-    startline_num = int(startline_num)
-    salons = dataset.get_salons()[startline_num:startline_num + 10]
-    salon_buttoms = []
+    start_line_num = int(start_line_num)
+    salons = dataset.get_salons()[start_line_num:start_line_num + 10]
+    salon_buttons = []
     for index, salon in enumerate(salons):
-        salon_buttoms.append(types.InlineKeyboardButton(text=salon['name'], callback_data=f'salon{index}'))
-    markup.add(*salon_buttoms)
-    prev_salons_button = types.InlineKeyboardButton(text="◀️", callback_data=f'prev_salons_{startline_num - 10}')
-    next_salons_button = types.InlineKeyboardButton(text="▶️", callback_data=f'next_salons_{startline_num + 10}')
+        salon_buttons.append(types.InlineKeyboardButton(
+            text=salon['name'],
+            callback_data=f'salon__{salon["id"]}')
+        )
+    markup.add(*salon_buttons)
+    prev_salons_button = types.InlineKeyboardButton(text="◀️", callback_data=f'prev_salons_{start_line_num - 10}')
+    next_salons_button = types.InlineKeyboardButton(text="▶️", callback_data=f'next_salons_{start_line_num + 10}')
     markup.row(prev_salons_button, next_salons_button)
     markup.row(types.InlineKeyboardButton(text='Назад', callback_data=call_back))
     return markup
 
 
-def get_list_procedures(startline_num: int, call_back):
+def get_list_procedures(start_line_num: int, call_back):
     markup = types.InlineKeyboardMarkup(row_width=1)
-    startline_num = int(startline_num)
-    procedures = dataset.get_procedures()[startline_num:startline_num + 10]
-    procedure_buttoms = []
+    start_line_num = int(start_line_num)
+    procedures = dataset.get_procedures()[start_line_num:start_line_num + 10]
+    procedure_buttons = []
     for index, procedure in enumerate(procedures):
-        procedure_buttoms.append(types.InlineKeyboardButton(text=procedure['name'], callback_data=f'procedure{index}'))
-    markup.add(*procedure_buttoms)
-    prev_procedures_button = types.InlineKeyboardButton(text="◀️",
-                                                        callback_data=f'prev_procedures_{startline_num - 10}')
-    next_procedures_button = types.InlineKeyboardButton(text="▶️",
-                                                        callback_data=f'next_procedures_{startline_num + 10}')
+        procedure_buttons.append(types.InlineKeyboardButton(
+            text=procedure['name'],
+            callback_data=f'procedure__{procedure["id"]}')
+        )
+    markup.add(*procedure_buttons)
+    prev_procedures_button = types.InlineKeyboardButton(
+        text="◀️",
+        callback_data=f'prev_procedures_{start_line_num - 10}'
+    )
+    next_procedures_button = types.InlineKeyboardButton(
+        text="▶️",
+        callback_data=f'next_procedures_{start_line_num + 10}'
+    )
     markup.row(prev_procedures_button, next_procedures_button)
     markup.row(types.InlineKeyboardButton('Назад', callback_data=call_back))
     return markup
 
 
-def get_list_of_times(startline_num, call_back):
+def get_list_of_times(start_line_num, call_back):
     markup = types.InlineKeyboardMarkup(row_width=4)
-    startline_num = int(startline_num)
+    start_line_num = int(start_line_num)
     times = [
                 '9:00',
-                '9:30',
-                '10:00',
-                '10:30',
-                '11:00',
-                '11:30',
-                '12:00',
-                '12:30',
-                '13:00',
-                '13:30',
-                '14:00',
-                '14:30',
-                '15:00',
-                '15:30',
-                '16:00',
-                '16:30',
-                '17:00',
-                '17:30',
-                '18:00',
-                '18:30',
-                '19:00',
-                '19:30',
-                '20:00',
-                '20:30',
-                '21:00',
-                '21:30',
-                '22:00'
-            ][startline_num:startline_num + 12]
-    time_buttoms = []
+            ][start_line_num:start_line_num + 12]
+    time_buttons = []
     for time in times:
-        time_buttoms.append(types.InlineKeyboardButton(text=time, callback_data=f'time_{time}'))
-    markup.add(*time_buttoms)
+        time_buttons.append(types.InlineKeyboardButton(text=time, callback_data=f'time_{time}'))
+    markup.add(*time_buttons)
     # Создаем кнопки для переключения месяцев
-    prev_procedures_button = types.InlineKeyboardButton(text="◀️",
-                                                        callback_data=f'prev_times_{startline_num - 12}')
-    next_procedures_button = types.InlineKeyboardButton(text="▶️",
-                                                        callback_data=f'next_times_{startline_num + 12}')
+    prev_procedures_button = types.InlineKeyboardButton(
+        text="◀️",
+        callback_data=f'prev_times_{start_line_num - 12}'
+    )
+    next_procedures_button = types.InlineKeyboardButton(
+        text="▶️",
+        callback_data=f'next_times_{start_line_num + 12}'
+    )
     markup.row(prev_procedures_button, next_procedures_button)
     markup.row(types.InlineKeyboardButton('Назад', callback_data=call_back))
     return markup
 
 
-def get_buttoms_yes_or_no(phone_number):
+def get_buttons_yes_no(phone_number):
     markup = types.InlineKeyboardMarkup(row_width=2)
-    buttom_yes = types.InlineKeyboardButton(text='Да', callback_data=f'yes_phone_{phone_number}')
-    buttom_no = types.InlineKeyboardButton(text='Заново', callback_data=f'no_phone_{phone_number}')
-    markup.add(buttom_yes, buttom_no)
+    button_yes = types.InlineKeyboardButton(text='Да', callback_data=f'yes_phone_{phone_number}')
+    button_no = types.InlineKeyboardButton(text='Заново', callback_data=f'no_phone_{phone_number}')
+    markup.add(button_yes, button_no)
     return markup
 
 
@@ -158,13 +149,13 @@ class BOT:
             menu = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
             button2 = types.KeyboardButton('Помощь')
             menu.add(button2)
-            bot.send_message(message.chat.id,
-                             "Привет. это телеграм бот салонов красоты XXXX. Здесь вы можете записаться на прием, в удобное для вас место и время.",
-                             reply_markup=menu
-                             )
+            bot.send_message(
+                message.chat.id,
+                "Привет. это телеграм бот салонов красоты XXXX. Здесь вы можете записаться на прием, в удобное для вас место и время.",
+                reply_markup=menu
+            )
             keyword = types.InlineKeyboardMarkup()
-            button1 = types.InlineKeyboardButton('Записаться', callback_data='record')
-            keyword.add(button1)
+            keyword.add(types.InlineKeyboardButton('Записаться', callback_data='record'))
 
             # Отправка сообщения с меню чтоб сразу было видно
             bot.send_message(message.chat.id, 'Хотите записаться?', reply_markup=keyword)
@@ -179,6 +170,7 @@ class BOT:
 
         @bot.callback_query_handler(func=lambda call: True)
         def handle_callback(call):
+
             if call.data == 'record':
                 global RECORD_INF
                 RECORD_INF = {}
@@ -196,34 +188,44 @@ class BOT:
                 markup = get_list_masters(0, call_back)
                 text = 'Выберите мастера'
                 replace_message(call, text, bot, markup)
-                # bot.send_message(call.message.chat.id, 'Выберите мастера', reply_markup=markup)
             if call.data.startswith('next_masters'):
                 call_back = 'record'
                 markup = get_list_masters(call.data.split('_')[2], call_back)
-                bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                              reply_markup=markup)
+                bot.edit_message_reply_markup(
+                    chat_id=call.message.chat.id,
+                    message_id=call.message.message_id,
+                    reply_markup=markup
+                )
             if call.data.startswith('prev_masters') and int(call.data.split('_')[2]) >= 0:
                 call_back = 'record'
                 markup = get_list_masters(call.data.split('_')[2], call_back)
-                bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                              reply_markup=markup)
+                bot.edit_message_reply_markup(
+                    chat_id=call.message.chat.id,
+                    message_id=call.message.message_id,
+                    reply_markup=markup
+                )
 
             if call.data == 'select_salon':
                 call_back = 'record'
                 markup = get_list_salons(0, call_back)
                 text = 'Выберите салон'
                 replace_message(call, text, bot, markup)
-                # bot.send_message(call.message.chat.id, 'Выберите салон', reply_markup=markup)
             if call.data.startswith('next_salons'):
                 call_back = 'record'
                 markup = get_list_salons(call.data.split('_')[2], call_back)
-                bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                              reply_markup=markup)
+                bot.edit_message_reply_markup(
+                    chat_id=call.message.chat.id,
+                    message_id=call.message.message_id,
+                    reply_markup=markup
+                )
             if call.data.startswith('prev_salons') and int(call.data.split('_')[2]) >= 0:
                 call_back = 'record'
                 markup = get_list_salons(call.data.split('_')[2], call_back)
-                bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                              reply_markup=markup)
+                bot.edit_message_reply_markup(
+                    chat_id=call.message.chat.id,
+                    message_id=call.message.message_id,
+                    reply_markup=markup
+                )
 
             if call.data.startswith('salon') or call.data.startswith('master'):
                 call_back = 'record'
@@ -234,13 +236,19 @@ class BOT:
             if call.data.startswith('next_procedures'):
                 call_back = 'record'
                 markup = get_list_procedures(call.data.split('_')[2], call_back)
-                bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                              reply_markup=markup)
+                bot.edit_message_reply_markup(
+                    chat_id=call.message.chat.id,
+                    message_id=call.message.message_id,
+                    reply_markup=markup
+                )
             if call.data.startswith('prev_procedures') and int(call.data.split('_')[2]) >= 0:
                 call_back = 'record'
                 markup = get_list_procedures(call.data.split('_')[2], call_back)
-                bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                              reply_markup=markup)
+                bot.edit_message_reply_markup(
+                    chat_id=call.message.chat.id,
+                    message_id=call.message.message_id,
+                    reply_markup=markup
+                )
 
             if call.data.startswith('procedure'):
                 call_back = 'salon'
@@ -254,15 +262,21 @@ class BOT:
                 current_month = int(call.data.split('_')[2])
                 prev_month = current_month - 1 if current_month > 1 else 12
                 markup = get_calendar(call_back, prev_month)
-                bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                              reply_markup=markup)
+                bot.edit_message_reply_markup(
+                    chat_id=call.message.chat.id,
+                    message_id=call.message.message_id,
+                    reply_markup=markup
+                )
             if call.data.startswith('next_month'):
                 call_back = 'salon'
                 current_month = int(call.data.split('_')[2])
                 next_month = current_month + 1 if current_month < 12 else 1
                 markup = get_calendar(call_back, next_month)
-                bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                              reply_markup=markup)
+                bot.edit_message_reply_markup(
+                    chat_id=call.message.chat.id,
+                    message_id=call.message.message_id,
+                    reply_markup=markup
+                )
 
             if call.data.startswith('day'):
                 call_back = 'procedure'
@@ -273,13 +287,19 @@ class BOT:
             if call.data.startswith('prev_times'):
                 call_back = 'procedure'
                 markup = get_list_of_times(call.data.split('_')[2], call_back)
-                bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                              reply_markup=markup)
+                bot.edit_message_reply_markup(
+                    chat_id=call.message.chat.id,
+                    message_id=call.message.message_id,
+                    reply_markup=markup
+                )
             if call.data.startswith('next_times'):
                 call_back = 'procedure'
                 markup = get_list_of_times(call.data.split('_')[2], call_back)
-                bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                              reply_markup=markup)
+                bot.edit_message_reply_markup(
+                    chat_id=call.message.chat.id,
+                    message_id=call.message.message_id,
+                    reply_markup=markup
+                )
 
             if call.data.startswith('time'):  # ВОТ ЗДЕСЬ СОГЛАШЕНИЕ
                 call_back = 'day'
@@ -315,7 +335,7 @@ class BOT:
         def process_phone_number(message):
             phone_number = message.text
             bot.send_message(message.chat.id, f"Ваш номер телефона: {phone_number}")
-            markup = get_buttoms_yes_or_no(phone_number)
+            markup = get_buttons_yes_no(phone_number)
             bot.send_message(message.chat.id, "Верно?", reply_markup=markup)
             global is_phone_handler_registered
             is_phone_handler_registered = False
