@@ -7,7 +7,7 @@ from django.utils.timezone import utc
 
 def get_day_times(day, interval):
     start = day.replace(hour=10, minute=0, second=0, microsecond=0)
-    end = start + timedelta(hours=5)
+    end = day.replace(hour=21, minute=59, second=0, microsecond=0)
     time_current = start
     day_times = []
     while time_current <= end:
@@ -82,7 +82,8 @@ def get_schedule(day, salon=None, master=None, busy=False):
     return schedules
 
 
-def set_salon_schedule(salon, employee, day_times):
+def set_salon_schedule(day, salon, employee):
+    day_times = get_day_times(day, 30)
     for time in day_times:
         schedule, created = Schedule.objects.get_or_create(
             datetime=time,
@@ -93,29 +94,12 @@ def set_salon_schedule(salon, employee, day_times):
         )
 
 
-def set_schedule():
-    day = datetime.today()
-    day_times = get_day_times(day, 30)
-    salon1 = get_object_or_404(Salon, pk=1)
-    salon2 = get_object_or_404(Salon, pk=2)
-    for index in range(2, 6, 1):
-        employee = get_object_or_404(Employee, pk=index)
-        if index % 2 == 0:
-            set_salon_schedule(salon2, employee, day_times)
-        else:
-            set_salon_schedule(salon1, employee, day_times)
-
-
-# def make_order(time, salon, master, procedure=None):
-def make_order(order_info, client_name):
-    # order_info = {
-    #     'inf_about_master_or_salon': 'salon__1',
-    #     'procedure': 'procedure__9', 'day': 'day__25 May 2023',
-    #     'time': 'time__1', 'phone_number': '+23030001122'}
-    procedure = None
+def make_order(order_info, procedure=None):
     try:
         schedule_id = order_info['time'].split('__')[1]
         phone_number = order_info['phone_number']
+        client_name = order_info['client_name']
+        procedure_id = order_info['procedure'].split('__')[1]
     except KeyError or IndexError or ValueError:
         return False
 
@@ -124,6 +108,8 @@ def make_order(order_info, client_name):
         phone=phone_number,
     )
     client.save()
+
+    procedure = get_object_or_404(Procedure, pk=procedure_id)
 
     order, created = Schedule.objects.update_or_create(
         pk=schedule_id,

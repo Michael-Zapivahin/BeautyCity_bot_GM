@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from services.models import Employee, Salon
+from services.models import Employee, Salon, Schedule
 from django.shortcuts import get_object_or_404
 from django.http import Http404
 import calendar
@@ -28,6 +28,17 @@ token = TG_TOKEN
 provider_token = PAYMENTS_TOKEN
 bot = telebot.TeleBot(token)
 
+
+def get_order_info(record):
+    dataset.make_order(record)
+    sch_time = record['time'].split('__')
+    schedule = Schedule.objects.filter(pk=sch_time[1]).first()
+    return f'{schedule.salon}, {schedule.datetime}, {schedule.employee.name}'
+
+
+# {'inf_about_master_or_salon': 'salon__2',
+#  'procedure': 'procedure', 'day': 'day__29 May 2023',
+#  'time': 'time__32', 'phone_number': '+79778108747', 'client_name': 'sss'}
 
 def get_calendar(call_back, month=None):
     markup = types.InlineKeyboardMarkup(row_width=7)
@@ -219,22 +230,21 @@ class BOT:
             if call.data.startswith('start_payment_buy'):
                 amount = 100
                 procedure = 'hair dressed'
+                price = []
+                price.append(LabeledPrice(label=f'Услуги салона {procedure}', amount=amount*100))
                 bot.send_invoice(
-                    call.message.chat.id,  # chat_id
-                    'Оплата услуг салона',  # title
+                    call.message.chat.id,
+                    'Оплата услуг салона',
                     'Вы можете оплатить услуги на месте!',
-                    # description
-                    'HAPPY FRIDAYS COUPON',  # invoice_payload
+                    'HAPPY FRIDAYS COUPON',
                     provider_token,
                     'rub',
-                    prices=[LabeledPrice(
-                        label='Услуги салона...', amount=amount
-                    ), LabeledPrice(procedure, amount*100)],
+                    prices=price,
                     photo_url='',
-                    photo_height=512,  # !=0/None or picture won't be shown
+                    photo_height=512,
                     photo_width=512,
                     photo_size=512,
-                    is_flexible=False,  # True If you need to set up Shipping Fee
+                    is_flexible=False,
                     start_parameter='service-example')
 
             if call.data == 'record':
@@ -320,6 +330,7 @@ class BOT:
             if call.data.startswith('procedure'):
                 call_back = 'salon'
                 RECORD_INF['procedure'] = call.data
+                print(RECORD_INF)
                 markup = get_calendar(call_back)
                 text = f'Выберите дату'
                 replace_message(call, text, bot, markup)
@@ -396,6 +407,12 @@ class BOT:
                     bot.register_next_step_handler(call.message, process_name)
                     is_name_registered = True
 
+                # if call.data.startswith('enter_name'):
+                #     call_back = 'time'
+                #     markup = types.InlineKeyboardMarkup()
+                #     markup.row(types.InlineKeyboardButton('Назад', callback_data=call_back))
+                #     RECORD_INF['client_name'] = call.data.split('_')[2]
+
         def process_phone_number(message):
             phone_number = message.text
             bot.send_message(message.chat.id, f"Ваш номер телефона: {phone_number}")
@@ -406,8 +423,9 @@ class BOT:
 
         def process_name(message):
             name = message.text
+            RECORD_INF['client_name'] = name
             bot.send_message(message.chat.id, f"Приятно познакомиться, {name}")
-            bot.send_message(message.chat.id, f"Ваша запись {RECORD_INF} \n до встречи")
+            bot.send_message(message.chat.id, f"Ваша запись {get_order_info(RECORD_INF)} \n до встречи")
             global is_name_registered
             is_name_registered = False
 
