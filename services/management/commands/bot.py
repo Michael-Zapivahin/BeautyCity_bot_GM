@@ -6,6 +6,7 @@ import calendar
 import datetime
 import telebot
 from telebot import types
+from telebot.types import LabeledPrice, ShippingOption
 from dotenv import load_dotenv
 import os
 
@@ -19,6 +20,17 @@ RECORD_INF = {}
 TG_TOKEN = os.environ['TG_BOT_TOKEN']
 is_phone_handler_registered = False
 is_name_registered = False
+PAYMENTS_TOKEN = os.environ['PAYMENTS_TOKEN']
+IMAGES_URL = os.environ['IMAGES_URL']
+
+
+token = TG_TOKEN
+provider_token = PAYMENTS_TOKEN
+bot = telebot.TeleBot(token)
+prices = [LabeledPrice(label='Working Time Machine', amount=5750), LabeledPrice('Gift wrapping', 500)]
+shipping_options = [
+    ShippingOption(id='instant', title='WorldWide Teleporter').add_price(LabeledPrice('Teleporter', 1000)),
+    ShippingOption(id='pickup', title='Local pickup').add_price(LabeledPrice('Pickup', 300))]
 
 
 def get_calendar(call_back, month=None):
@@ -124,7 +136,6 @@ def get_work_times(start_line_num, call_back):
         if len(date_id) > 1 and date_id[0] == 'day':
             day = datetime.datetime.strptime(date_id[1], '%d %B %Y')
             day = datetime.datetime(day.year, day.month, day.day, 0, 0, 1,  tzinfo=utc)
-            print('my date', day, date_id[1])
     except KeyError or Http404 or IndexError or ValueError:
         pass
 
@@ -178,6 +189,68 @@ class BOT:
     def start(self):
 
         bot = telebot.TeleBot(TG_TOKEN)
+
+        # start payment block
+
+        @bot.message_handler(commands=['start_payment'])
+        def command_start(message):
+            bot.send_message(message.chat.id,
+                             "Hello, I'm the demo merchant bot."
+                             " I can sell you a Time Machine."
+                             " Use /buy to order one, /terms for Terms and Conditions")
+
+        @bot.message_handler(commands=['terms'])
+        def command_terms(message):
+            bot.send_message(message.chat.id,
+                             'Thank you for shopping with our demo bot. We hope you like your new time machine!\n'
+                             '1. If your time machine was not delivered on time, please rethink your concept of time and try again.\n'
+                             '2. If you find that your time machine is not working, kindly contact our future service workshops on Trappist-1e.'
+                             ' They will be accessible anywhere between May 2075 and November 4000 C.E.\n'
+                             '3. If you would like a refund, kindly apply for one yesterday and we will have sent it to you immediately.')
+
+        @bot.message_handler(commands=['buy'])
+        def command_pay(message):
+            bot.send_message(message.chat.id,
+                             "Real cards won't work with me, no money will be debited from your account."
+                             " Use this test card number to pay for your Time Machine: `4242 4242 4242 4242`"
+                             "\n\nThis is your demo invoice:", parse_mode='Markdown')
+            bot.send_invoice(
+                message.chat.id,  # chat_id
+                'Working Time Machine',  # title
+                ' Want to visit your great-great-great-grandparents? Make a fortune at the races? Shake hands with Hammurabi and take a stroll in the Hanging Gardens? Order our Working Time Machine today!',
+                # description
+                'HAPPY FRIDAYS COUPON',  # invoice_payload
+                provider_token,  # provider_token
+                'usd',  # currency
+                prices,  # prices
+                photo_url='http://erkelzaar.tsudao.com/models/perrotta/TIME_MACHINE.jpg',
+                photo_height=512,  # !=0/None or picture won't be shown
+                photo_width=512,
+                photo_size=512,
+                is_flexible=False,  # True If you need to set up Shipping Fee
+                start_parameter='time-machine-example')
+
+        @bot.shipping_query_handler(func=lambda query: True)
+        def shipping(shipping_query):
+            print(shipping_query)
+            bot.answer_shipping_query(shipping_query.id, ok=True, shipping_options=shipping_options,
+                                      error_message='Oh, seems like our Dog couriers are having a lunch right now. Try again later!')
+
+        @bot.pre_checkout_query_handler(func=lambda query: True)
+        def checkout(pre_checkout_query):
+            bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True,
+                                          error_message="Aliens tried to steal your card's CVV, but we successfully protected your credentials,"
+                                                        " try to pay again in a few minutes, we need a small rest.")
+
+        @bot.message_handler(content_types=['successful_payment'])
+        def got_payment(message):
+            bot.send_message(message.chat.id,
+                             'Hoooooray! Thanks for payment! We will proceed your order for `{} {}` as fast as possible! '
+                             'Stay in touch.\n\nUse /buy again to get a Time Machine for your friend!'.format(
+                                 message.successful_payment.total_amount / 100, message.successful_payment.currency),
+                             parse_mode='Markdown')
+
+        # end payment block
 
         @bot.message_handler(commands=['start', 'help'])
         def start(message):
@@ -269,7 +342,7 @@ class BOT:
                 call_back = 'record'
                 RECORD_INF['inf_about_master_or_salon'] = call.data
                 markup = get_list_procedures(0, call_back)
-                text = f'{RECORD_INF} \n Выберите процеду'
+                text = f'Выберите процеду'
                 replace_message(call, text, bot, markup)
             if call.data.startswith('next_procedures'):
                 call_back = 'record'
@@ -292,7 +365,7 @@ class BOT:
                 call_back = 'salon'
                 RECORD_INF['procedure'] = call.data
                 markup = get_calendar(call_back)
-                text = f'{RECORD_INF} \n Выберите дату'
+                text = f'Выберите дату'
                 replace_message(call, text, bot, markup)
 
             if call.data.startswith('prev_month'):
@@ -320,7 +393,7 @@ class BOT:
                 call_back = 'procedure'
                 RECORD_INF['day'] = call.data
                 markup = get_work_times(0, call_back)
-                text = f'{RECORD_INF} \n Выберите время'
+                text = f'Выберите время'
                 replace_message(call, text, bot, markup)
             if call.data.startswith('prev_times'):
                 call_back = 'procedure'
@@ -339,13 +412,20 @@ class BOT:
                     reply_markup=markup
                 )
 
-            if call.data.startswith('time'):  # ВОТ ЗДЕСЬ СОГЛАШЕНИЕ
-                call_back = 'day'
+            if call.data.startswith('payment'):
                 markup = types.InlineKeyboardMarkup()
-                markup.row(types.InlineKeyboardButton('Назад', callback_data=call_back))
+                markup.row(types.InlineKeyboardButton('Back', callback_data='time'))
+                bot.send_message(
+                    call.message.chat.id,
+                    'payment start',
+                    reply_markup=markup
+                )
+
+            if call.data.startswith('time'):
+                markup = types.InlineKeyboardMarkup()
+                markup.row(types.InlineKeyboardButton('Назад', callback_data='day'))
+                markup.row(types.InlineKeyboardButton('Payment', callback_data='payment'))
                 RECORD_INF['time'] = call.data
-                text = f'{RECORD_INF}'
-                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=text)
                 bot.send_message(
                     call.message.chat.id,
                     'Если все верно, напишите номер телефона, учтите, написав, вы соглашаетесь с обработкой персональных данных: \n Предоставляя свои персональные данные Покупатель даёт согласие на обработку, хранение и использование своих персональных данных на основании ФЗ № 152-ФЗ «О персональных данных» от 27.07.2006 г.',

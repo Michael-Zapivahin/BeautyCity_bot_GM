@@ -59,8 +59,6 @@ def get_salons():
 
 
 def get_schedule(day, salon=None, master=None, busy=False):
-    # start_time = day.replace(hour=0, minute=0, second=0, microsecond=0)
-    # end_time = day.replace(hour=23, minute=59, second=59, microsecond=0)
     start_time = datetime(day.year, day.month, day.day, 0, 0, 0, tzinfo=utc)
     end_time = datetime(day.year, day.month, day.day, 23, 59, 59, tzinfo=utc)
     schedules_query = Schedule.objects.filter(datetime__gte=start_time, datetime__lte=end_time, confirmation=busy)
