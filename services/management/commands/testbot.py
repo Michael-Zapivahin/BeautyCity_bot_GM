@@ -420,14 +420,12 @@ class BOT:
         @bot.pre_checkout_query_handler(func=lambda query: True)
         def checkout(pre_checkout_query):
             bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True,
-                                          error_message="Aliens tried to steal your card's CVV, but we successfully protected your credentials,"
-                                                        " try to pay again in a few minutes, we need a small rest.")
+                                          error_message="Произошла ошибка при оплате, попробуйте еще раз.")
 
         @bot.message_handler(content_types=['successful_payment'])
         def got_payment(message):
             bot.send_message(message.chat.id,
-                             'Hoooooray! Thanks for payment! We will proceed your order for `{} {}` as fast as possible! '
-                             'Stay in touch.\n\nUse /buy again to get a Time Machine for your friend!'.format(
+                             'Срасибо за платеж! Мы будем рады видеть вас в нашем салоне! '.format(
                                  message.successful_payment.total_amount / 100, message.successful_payment.currency),
                              parse_mode='Markdown')
 
