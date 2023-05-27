@@ -10,7 +10,9 @@ from dotenv import load_dotenv
 import os
 
 import services.dataset as dataset
-import services.payment as payment
+from pytz import timezone
+from django.utils.timezone import utc
+
 
 load_dotenv()
 RECORD_INF = {}
@@ -106,7 +108,7 @@ def get_list_procedures(start_line_num: int, call_back):
     return markup
 
 
-def get_list_of_times(start_line_num, call_back):
+def get_work_times(start_line_num, call_back):
     global RECORD_INF
     salon, master = None, None
     today = datetime.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
@@ -121,6 +123,8 @@ def get_list_of_times(start_line_num, call_back):
         date_id = RECORD_INF['day'].split('__')
         if len(date_id) > 1 and date_id[0] == 'day':
             day = datetime.datetime.strptime(date_id[1], '%d %B %Y')
+            day = datetime.datetime(day.year, day.month, day.day, 0, 0, 1,  tzinfo=utc)
+            print('my date', day, date_id[1])
     except KeyError or Http404 or IndexError or ValueError:
         pass
 
@@ -175,14 +179,6 @@ class BOT:
 
         bot = telebot.TeleBot(TG_TOKEN)
 
-        @bot.message_handler(commands=['buy'])
-        def handle_invoice(message):
-            bot.send_invoice(payment.get_invoice(message))
-            bot.send_message(
-                message.chat.id,
-                "Payment menu."
-            )
-
         @bot.message_handler(commands=['start', 'help'])
         def start(message):
             # Отправка стартового сообщения
@@ -209,17 +205,6 @@ class BOT:
                     'Если возникли проблемы с записью, или есть непонятные моменты, свяжитесь по телефону XXXX'
                 )
 
-        @bot.message_handler(commands=['terms'])
-        def handle_answer(message: types.Message):
-            message.answer(payment.get_message())
-
-        # @bot.message_handler(commands=['buy'])
-        # def handle_invoice(message):
-        #     # bot.get_invoice(message)
-        #     bot.send_message(
-        #         message.chat.id,
-        #         "Payment menu."
-        #     )
 
         @bot.callback_query_handler(func=lambda call: True)
         def handle_callback(call):
@@ -334,12 +319,12 @@ class BOT:
             if call.data.startswith('day'):
                 call_back = 'procedure'
                 RECORD_INF['day'] = call.data
-                markup = get_list_of_times(0, call_back)
+                markup = get_work_times(0, call_back)
                 text = f'{RECORD_INF} \n Выберите время'
                 replace_message(call, text, bot, markup)
             if call.data.startswith('prev_times'):
                 call_back = 'procedure'
-                markup = get_list_of_times(call.data.split('_')[2], call_back)
+                markup = get_work_times(call.data.split('_')[2], call_back)
                 bot.edit_message_reply_markup(
                     chat_id=call.message.chat.id,
                     message_id=call.message.message_id,
@@ -347,7 +332,7 @@ class BOT:
                 )
             if call.data.startswith('next_times'):
                 call_back = 'procedure'
-                markup = get_list_of_times(call.data.split('_')[2], call_back)
+                markup = get_work_times(call.data.split('_')[2], call_back)
                 bot.edit_message_reply_markup(
                     chat_id=call.message.chat.id,
                     message_id=call.message.message_id,
