@@ -10,13 +10,13 @@ from dotenv import load_dotenv
 import os
 
 import services.dataset as dataset
+import services.payment as payment
 
 load_dotenv()
 RECORD_INF = {}
 TG_TOKEN = os.environ['TG_BOT_TOKEN']
 is_phone_handler_registered = False
 is_name_registered = False
-
 
 
 def get_calendar(call_back, month=None):
@@ -172,10 +172,16 @@ def replace_message(call, text, bot, markup):
 
 class BOT:
     def start(self):
-        # dataset.make_order('', '')
-        # return
 
         bot = telebot.TeleBot(TG_TOKEN)
+
+        @bot.message_handler(commands=['buy'])
+        def handle_invoice(message):
+            bot.send_invoice(payment.get_invoice(message))
+            bot.send_message(
+                message.chat.id,
+                "Payment menu."
+            )
 
         @bot.message_handler(commands=['start', 'help'])
         def start(message):
@@ -194,6 +200,7 @@ class BOT:
             # Отправка сообщения с меню чтоб сразу было видно
             bot.send_message(message.chat.id, 'Хотите записаться?', reply_markup=keyword)
 
+
         @bot.message_handler(func=lambda message: True)
         def handle_message(message):
             if message.text == 'Помощь':
@@ -201,6 +208,18 @@ class BOT:
                     message.chat.id,
                     'Если возникли проблемы с записью, или есть непонятные моменты, свяжитесь по телефону XXXX'
                 )
+
+        @bot.message_handler(commands=['terms'])
+        def handle_answer(message: types.Message):
+            message.answer(payment.get_message())
+
+        # @bot.message_handler(commands=['buy'])
+        # def handle_invoice(message):
+        #     # bot.get_invoice(message)
+        #     bot.send_message(
+        #         message.chat.id,
+        #         "Payment menu."
+        #     )
 
         @bot.callback_query_handler(func=lambda call: True)
         def handle_callback(call):
