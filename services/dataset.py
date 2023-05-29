@@ -58,8 +58,7 @@ def get_salons():
     return salons
 
 
-def get_schedule(schedule_day, salon=None, master=None, busy=False):
-    day = datetime.strptime(schedule_day, '%d-%m-%Y')
+def get_schedule(day, salon=None, master=None, busy=False):
     start_time = datetime(day.year, day.month, day.day, 0, 0, 0, tzinfo=utc)
     end_time = datetime(day.year, day.month, day.day, 23, 59, 59, tzinfo=utc)
     schedules_query = Schedule.objects.filter(datetime__gte=start_time, datetime__lte=end_time, confirmation=busy)
@@ -93,6 +92,34 @@ def set_salon_schedule(day, salon, employee):
                 'employee': employee,
             }
         )
+
+
+def make_order(order_info, procedure=None):
+    try:
+        schedule_id = order_info['time'].split('__')[1]
+        phone_number = order_info['phone_number']
+        client_name = order_info['client_name']
+        procedure_id = order_info['procedure'].split('__')[1]
+    except KeyError or IndexError or ValueError:
+        return False
+
+    client, created = Client.objects.get_or_create(
+        name=client_name,
+        phone=phone_number,
+    )
+    client.save()
+
+    procedure = get_object_or_404(Procedure, pk=procedure_id)
+
+    order, created = Schedule.objects.update_or_create(
+        pk=schedule_id,
+        defaults={
+            'client': client,
+            'procedure': procedure,
+            'confirmation': True,
+        }
+    )
+    return order
 
 
 def make_order(order_info, procedure=None):

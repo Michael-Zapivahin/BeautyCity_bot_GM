@@ -30,10 +30,11 @@ bot = telebot.TeleBot(token)
 
 
 def get_order_info(record):
+    # print(record)
     dataset.make_order(record)
     sch_time = record['time'].split('__')
     schedule = Schedule.objects.filter(pk=sch_time[1]).first()
-    return f'{schedule.salon}, {schedule.datetime}, {schedule.employee.name}'
+    return f'салон: {schedule.salon}, {schedule.datetime}, мастер: {schedule.employee.name}'
 
 
 # {'inf_about_master_or_salon': 'salon__2',
@@ -407,14 +408,10 @@ class BOT:
                     bot.register_next_step_handler(call.message, process_name)
                     is_name_registered = True
 
-                # if call.data.startswith('enter_name'):
-                #     call_back = 'time'
-                #     markup = types.InlineKeyboardMarkup()
-                #     markup.row(types.InlineKeyboardButton('Назад', callback_data=call_back))
-                #     RECORD_INF['client_name'] = call.data.split('_')[2]
-
         def process_phone_number(message):
-            phone_number = message.text
+            phone_number = message.text.strip()
+            if len(phone_number) <= 10:
+                phone_number = f'+7{phone_number}'
             bot.send_message(message.chat.id, f"Ваш номер телефона: {phone_number}")
             markup = get_buttons_yes_no(phone_number)
             bot.send_message(message.chat.id, "Верно?", reply_markup=markup)
