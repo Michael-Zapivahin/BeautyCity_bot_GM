@@ -37,12 +37,12 @@ def get_order_info(record):
     return f'салон: {schedule.salon}, {schedule.datetime}, мастер: {schedule.employee.name}'
 
 
-# {'inf_about_master_or_salon': 'salon__2',
-#  'procedure': 'procedure', 'day': 'day__29 May 2023',
-#  'time': 'time__32', 'phone_number': '+79778108747', 'client_name': 'sss'}
-
 def get_procedure_info(record):
-    procedure_id = record['procedure'].split('__')[1]
+    print(f'get_procedure_info {record}')
+    try:
+        procedure_id = record['procedure'].split('__')[1]
+    except KeyError:
+        procedure_id = 3
     procedure = Procedure.objects.filter(pk=procedure_id).first()
     return {'name': procedure.name, 'cost': procedure.cost}
 
@@ -130,7 +130,8 @@ def get_list_procedures(start_line_num: int, call_back):
         callback_data=f'next_procedures_{start_line_num + 10}'
     )
     markup.row(prev_procedures_button, next_procedures_button)
-    markup.row(types.InlineKeyboardButton('Назад', callback_data=call_back))
+    button_back = types.InlineKeyboardButton('Назад', callback_data=call_back)
+    markup.row(button_back)
     return markup
 
 
@@ -234,16 +235,41 @@ class BOT:
         @bot.callback_query_handler(func=lambda call: True)
         def handle_callback(call):
             global RECORD_INF
+            if call.data.startswith('start_payment_tips'):
+                print(RECORD_INF, 'start_payment_tips')
+                procedure = get_procedure_info(RECORD_INF)
+                amount = int(procedure['cost'])
+                tips = amount * 0.1
+                print(f'Услуги салона {procedure["name"]}', amount*100)
+                price = []
+                price.append(LabeledPrice(label=f'Услуги салона {procedure["name"]}', amount=amount*100))
+                price.append(LabeledPrice(label=f'Чаевые ', amount=round(tips * 100)))
+                bot.send_invoice(
+                    call.message.chat.id,
+                    'Оплата услуг салона',
+                    'Вы можете оплатить услуги на месте!',
+                    'HAPPY FRIDAYS COUPON',
+                    provider_token,
+                    'rub',
+                    prices=price,
+                    photo_url='',
+                    photo_height=512,
+                    photo_width=512,
+                    photo_size=512,
+                    is_flexible=False,
+                    start_parameter='service-example')
+
             if call.data.startswith('start_payment_buy'):
                 procedure = get_procedure_info(RECORD_INF)
                 amount = int(procedure['cost'])
+                print(f'Услуги салона {procedure["name"]}', amount*100)
                 price = []
                 price.append(LabeledPrice(label=f'Услуги салона {procedure["name"]}', amount=amount*100))
                 bot.send_invoice(
                     call.message.chat.id,
                     'Оплата услуг салона',
                     'Вы можете оплатить услуги на месте!',
-                    '',
+                    'HAPPY FRIDAYS COUPON',
                     provider_token,
                     'rub',
                     prices=price,
@@ -259,8 +285,7 @@ class BOT:
                 keyboard = types.InlineKeyboardMarkup()
                 button_master = types.InlineKeyboardButton(text='Выбрать мастера', callback_data='select_master')
                 button_salon = types.InlineKeyboardButton(text='Выбор салона', callback_data='select_salon')
-                button_pyment = types.InlineKeyboardButton(text='Оплатить', callback_data='start_payment_buy')
-                keyboard.add(button_master, button_salon, button_pyment)
+                keyboard.add(button_master, button_salon)
                 bot.edit_message_text(
                     chat_id=call.message.chat.id, message_id=call.message.message_id,
                     text='Супер, начнем запись!', reply_markup=keyboard
@@ -336,8 +361,11 @@ class BOT:
             if call.data.startswith('procedure'):
                 call_back = 'salon'
                 RECORD_INF['procedure'] = call.data
-                print(RECORD_INF)
+                print('str 360', RECORD_INF)
                 markup = get_calendar(call_back)
+                button_pyment = types.InlineKeyboardButton(text='Оплатить', callback_data='start_payment_buy')
+                button_tips = types.InlineKeyboardButton(text='Оплатить с чаевыми (10%)', callback_data='start_payment_tips')
+                markup.row(button_pyment, button_tips)
                 text = f'Выберите дату'
                 replace_message(call, text, bot, markup)
 
