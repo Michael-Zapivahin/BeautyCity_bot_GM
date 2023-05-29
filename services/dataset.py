@@ -123,17 +123,18 @@ def make_order(order_info, procedure=None):
 
 
 def make_order(order_info):
-    try:
-        schedule_id = order_info['time'].split('__')[1]
-        phone_number = order_info['phone_number']
-        client_name = order_info['client_name']
-        procedure_id = order_info['procedure'].split('__')[1]
-    except KeyError or IndexError or ValueError:
-        return False
+    # try:
+    print(order_info)
+    schedule_id = order_info['time'].split('__')[1]
+    phone_number = order_info['phone_number']
+    client_name = order_info['client_name']
+    procedure_id = order_info['procedure'].split('__')[1]
+    # except KeyError or IndexError or ValueError:
+    #     return False
 
     client, created = Client.objects.get_or_create(
-        name=client_name,
         phone=phone_number,
+        name=client_name,
     )
     client.save()
 

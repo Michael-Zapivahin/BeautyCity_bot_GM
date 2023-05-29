@@ -383,7 +383,6 @@ class BOT:
                 )
 
             if call.data.startswith('day'):
-                print(call.data)
                 call_back = 'procedure'
                 RECORD_INF['day'] = call.data
                 markup = get_work_times(0, call_back)
@@ -446,9 +445,9 @@ class BOT:
             is_phone_handler_registered = False
 
         def process_name(message):
-            dataset.make_order(RECORD_INF)
             name = message.text
             RECORD_INF['client_name'] = name
+            dataset.make_order(RECORD_INF)
             bot.send_message(message.chat.id, f"Приятно познакомиться, {name}")
             markup = types.InlineKeyboardMarkup()
             button_pyment = types.InlineKeyboardButton(text='Оплатить', callback_data='start_payment_buy')
