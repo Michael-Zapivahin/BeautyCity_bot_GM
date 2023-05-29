@@ -354,6 +354,8 @@ class BOT:
                 )
 
             if call.data.startswith('procedure'):
+                print(call.data)
+                RECORD_INF['procedure'] = call.data
                 call_back = 'salon'
                 markup = get_calendar(call_back)
                 text = f'Выберите дату'
@@ -381,6 +383,7 @@ class BOT:
                 )
 
             if call.data.startswith('day'):
+                print(call.data)
                 call_back = 'procedure'
                 RECORD_INF['day'] = call.data
                 markup = get_work_times(0, call_back)

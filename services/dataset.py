@@ -154,10 +154,9 @@ def set_payment(record):
     time = get_object_or_404(Schedule, pk=record['time'].split('__')[1])
     try:
         tips = record['tips']
-        amount = record['amount']
     except KeyError:
         tips = 0
-    print(record, time, amount, tips)
+    amount = record['amount']
     schedule, created = Payment.objects.update_or_create(
         order=time,
         defaults={
