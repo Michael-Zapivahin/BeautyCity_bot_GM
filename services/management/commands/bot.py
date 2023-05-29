@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from services.models import Employee, Salon, Schedule
+from services.models import Employee, Salon, Schedule, Procedure
 from django.shortcuts import get_object_or_404
 from django.http import Http404
 import calendar
@@ -40,6 +40,12 @@ def get_order_info(record):
 # {'inf_about_master_or_salon': 'salon__2',
 #  'procedure': 'procedure', 'day': 'day__29 May 2023',
 #  'time': 'time__32', 'phone_number': '+79778108747', 'client_name': 'sss'}
+
+def get_procedure_info(record):
+    procedure_id = record['procedure'].split('__')[1]
+    procedure = Procedure.objects.filter(pk=procedure_id).first()
+    return {'name': procedure.name, 'cost': procedure.cost}
+
 
 def get_calendar(call_back, month=None):
     markup = types.InlineKeyboardMarkup(row_width=7)
@@ -227,17 +233,17 @@ class BOT:
 
         @bot.callback_query_handler(func=lambda call: True)
         def handle_callback(call):
-
+            global RECORD_INF
             if call.data.startswith('start_payment_buy'):
-                amount = 100
-                procedure = 'hair dressed'
+                procedure = get_procedure_info(RECORD_INF)
+                amount = int(procedure['cost'])
                 price = []
-                price.append(LabeledPrice(label=f'Услуги салона {procedure}', amount=amount*100))
+                price.append(LabeledPrice(label=f'Услуги салона {procedure["name"]}', amount=amount*100))
                 bot.send_invoice(
                     call.message.chat.id,
                     'Оплата услуг салона',
                     'Вы можете оплатить услуги на месте!',
-                    'HAPPY FRIDAYS COUPON',
+                    '',
                     provider_token,
                     'rub',
                     prices=price,
@@ -249,7 +255,6 @@ class BOT:
                     start_parameter='service-example')
 
             if call.data == 'record':
-                global RECORD_INF
                 RECORD_INF = {}
                 keyboard = types.InlineKeyboardMarkup()
                 button_master = types.InlineKeyboardButton(text='Выбрать мастера', callback_data='select_master')
@@ -363,6 +368,7 @@ class BOT:
                 markup = get_work_times(0, call_back)
                 text = f'Выберите время'
                 replace_message(call, text, bot, markup)
+
             if call.data.startswith('prev_times'):
                 call_back = 'procedure'
                 markup = get_work_times(call.data.split('_')[2], call_back)
@@ -407,6 +413,8 @@ class BOT:
                 if not is_name_registered:
                     bot.register_next_step_handler(call.message, process_name)
                     is_name_registered = True
+
+
 
         def process_phone_number(message):
             phone_number = message.text.strip()
