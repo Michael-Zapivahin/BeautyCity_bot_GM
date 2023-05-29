@@ -1,4 +1,4 @@
-from services.models import Procedure, Employee, Salon, Schedule, Client
+from services.models import Procedure, Employee, Salon, Schedule, Client, Payment
 from datetime import datetime, timedelta
 from django.shortcuts import get_object_or_404
 from django.http import Http404
@@ -122,7 +122,7 @@ def make_order(order_info, procedure=None):
     return order
 
 
-def make_order(order_info, procedure=None):
+def make_order(order_info):
     try:
         schedule_id = order_info['time'].split('__')[1]
         phone_number = order_info['phone_number']
@@ -150,4 +150,18 @@ def make_order(order_info, procedure=None):
     return order
 
 
-
+def set_payment(record):
+    time = get_object_or_404(Schedule, pk=record['time'].split('__')[1])
+    try:
+        tips = record['tips']
+        amount = record['amount']
+    except KeyError:
+        tips = 0
+    print(record, time, amount, tips)
+    schedule, created = Payment.objects.update_or_create(
+        order=time,
+        defaults={
+            'debt': amount,
+            'tips': tips,
+        }
+    )

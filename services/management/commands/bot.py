@@ -30,19 +30,14 @@ bot = telebot.TeleBot(token)
 
 
 def get_order_info(record):
-    # print(record)
-    dataset.make_order(record)
     sch_time = record['time'].split('__')
     schedule = Schedule.objects.filter(pk=sch_time[1]).first()
     return f'салон: {schedule.salon}, {schedule.datetime}, мастер: {schedule.employee.name}'
 
 
 def get_procedure_info(record):
-    print(f'get_procedure_info {record}')
-    try:
-        procedure_id = record['procedure'].split('__')[1]
-    except KeyError:
-        procedure_id = 3
+    print(record)
+    procedure_id = record['procedure'].split('__')[1]
     procedure = Procedure.objects.filter(pk=procedure_id).first()
     return {'name': procedure.name, 'cost': procedure.cost}
 
@@ -236,11 +231,11 @@ class BOT:
         def handle_callback(call):
             global RECORD_INF
             if call.data.startswith('start_payment_tips'):
-                print(RECORD_INF, 'start_payment_tips')
                 procedure = get_procedure_info(RECORD_INF)
                 amount = int(procedure['cost'])
                 tips = amount * 0.1
-                print(f'Услуги салона {procedure["name"]}', amount*100)
+                RECORD_INF['amount'] = amount
+                RECORD_INF['tips'] = tips
                 price = []
                 price.append(LabeledPrice(label=f'Услуги салона {procedure["name"]}', amount=amount*100))
                 price.append(LabeledPrice(label=f'Чаевые ', amount=round(tips * 100)))
@@ -262,7 +257,7 @@ class BOT:
             if call.data.startswith('start_payment_buy'):
                 procedure = get_procedure_info(RECORD_INF)
                 amount = int(procedure['cost'])
-                print(f'Услуги салона {procedure["name"]}', amount*100)
+                RECORD_INF['amount'] = amount
                 price = []
                 price.append(LabeledPrice(label=f'Услуги салона {procedure["name"]}', amount=amount*100))
                 bot.send_invoice(
@@ -360,12 +355,7 @@ class BOT:
 
             if call.data.startswith('procedure'):
                 call_back = 'salon'
-                RECORD_INF['procedure'] = call.data
-                print('str 360', RECORD_INF)
                 markup = get_calendar(call_back)
-                button_pyment = types.InlineKeyboardButton(text='Оплатить', callback_data='start_payment_buy')
-                button_tips = types.InlineKeyboardButton(text='Оплатить с чаевыми (10%)', callback_data='start_payment_tips')
-                markup.row(button_pyment, button_tips)
                 text = f'Выберите дату'
                 replace_message(call, text, bot, markup)
 
@@ -445,9 +435,7 @@ class BOT:
 
 
         def process_phone_number(message):
-            phone_number = message.text.strip()
-            if len(phone_number) <= 10:
-                phone_number = f'+7{phone_number}'
+            phone_number = message.text
             bot.send_message(message.chat.id, f"Ваш номер телефона: {phone_number}")
             markup = get_buttons_yes_no(phone_number)
             bot.send_message(message.chat.id, "Верно?", reply_markup=markup)
@@ -455,12 +443,19 @@ class BOT:
             is_phone_handler_registered = False
 
         def process_name(message):
+            dataset.make_order(RECORD_INF)
             name = message.text
             RECORD_INF['client_name'] = name
             bot.send_message(message.chat.id, f"Приятно познакомиться, {name}")
-            bot.send_message(message.chat.id, f"Ваша запись {get_order_info(RECORD_INF)} \n до встречи")
+            markup = types.InlineKeyboardMarkup()
+            button_pyment = types.InlineKeyboardButton(text='Оплатить', callback_data='start_payment_buy')
+            button_tips = types.InlineKeyboardButton(text='Оплатить с чаевыми (10%)',
+                                                     callback_data='start_payment_tips')
+            markup.row(button_pyment, button_tips)
+            bot.send_message(message.chat.id, f"Ваша запись {get_order_info(RECORD_INF)} \n до встречи", reply_markup=markup)
             global is_name_registered
             is_name_registered = False
+
 
         # start payment block
 
@@ -475,6 +470,8 @@ class BOT:
 
         @bot.message_handler(content_types=['successful_payment'])
         def got_payment(message):
+            global RECORD_INF
+            dataset.set_payment(record=RECORD_INF)
             bot.send_message(message.chat.id,
                              'Срасибо за платеж! Мы будем рады видеть вас в нашем салоне! '.format(
                                  message.successful_payment.total_amount / 100, message.successful_payment.currency),
