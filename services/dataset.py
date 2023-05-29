@@ -150,20 +150,4 @@ def make_order(order_info, procedure=None):
     return order
 
 
-def get__dates(salon_or_master):
-    try:
-        master_or_salon = salon_or_master.split('__')
-        days = []
-        if len(master_or_salon) > 1 and master_or_salon[0] == 'master':
-            for date in Schedule.objects.filter(employee__id=master_or_salon[1]).values_list('datetime', flat=True):
-                days.append(date.strftime("%d-%m-%Y"))
-        elif len(master_or_salon) > 1 and master_or_salon[0] == 'salon':
-            for date in Schedule.objects.filter(salon__id=master_or_salon[1]).values_list('datetime', flat=True):
-                days.append(date.strftime("%d-%m-%Y"))
-    except KeyError or Http404 or IndexError or ValueError:
-        pass
-    return days
 
-
-if __name__ == '__main__':
-    make_order()
